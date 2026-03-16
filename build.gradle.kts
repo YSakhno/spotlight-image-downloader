@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.3.10"
+    id("io.kotest") version "6.1.7"
     application
     id("com.gradleup.shadow") version "9.4.0"
 }
@@ -9,14 +10,18 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:3.51.3.0")
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation("org.apache.commons:commons-csv:1.14.1")
-    testImplementation(kotlin("test"))
+
+    testImplementation("io.kotest:kotest-framework-engine:6.1.7")
+    testImplementation("io.kotest:kotest-extensions:6.1.7")
+    testImplementation("io.kotest:kotest-property:6.1.7")
+    testRuntimeOnly("io.kotest:kotest-runner-junit5:6.1.7")
 }
 
 kotlin {
     jvmToolchain(21)
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
