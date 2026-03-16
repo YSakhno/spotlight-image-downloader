@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation("org.jsoup:jsoup:1.22.1")
     implementation("org.xerial:sqlite-jdbc:3.51.3.0")
+    implementation("org.flywaydb:flyway-core:12.1.0")
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation("org.apache.commons:commons-csv:1.14.1")
 

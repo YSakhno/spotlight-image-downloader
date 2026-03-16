@@ -31,7 +31,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
 
     private val downloadsDir = File("downloads")
     private val dbFile = File("spotlight_downloader.db")
-    private val dbManager = DatabaseManager(dbFile)
+    private val dbManager = DatabaseManager(dbFile.absolutePath)
     private val processingStats = ProcessingStats()
     private val httpSession = Jsoup.newSession()
     private val downloader = ImageFileDownloader(processingStats, httpSession, dbManager, downloadsDir)
@@ -55,7 +55,10 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         }
 
         try {
-            dbManager.initDatabase()
+            // Prepare the database and connect to it
+            dbManager.migrateDatabase()
+            dbManager.connect()
+
             scraper.processInitialPage(initialUrl)
             println()
             generateSummaries()

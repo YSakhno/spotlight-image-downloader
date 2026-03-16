@@ -1,44 +1,65 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
-import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
+import java.util.logging.Level
+import java.util.logging.Logger
+import org.flywaydb.core.Flyway
 
 /**
  * Manages the SQLite database used to store information about downloaded images.
  *
- * @param dbFile the file where the database is stored.
+ * @param databaseFilePath path to the file where the database's binary data is stored.
  * @author Yurii Sakhno
  */
-class DatabaseManager(private val dbFile: File) : AutoCloseable {
+class DatabaseManager(databaseFilePath: String) : AutoCloseable {
+
+    /** Stores the URL used to establish a connection to the SQLite database. */
+    private val dbUrl = "jdbc:sqlite:$databaseFilePath"
+
+    /**
+     * The database connection, or `null` if the connection has not been established yet or has already been closed.
+     *
+     * This field is initialized to `null` and is set to a valid connection when the [connect] method is called (and
+     * successfully returns). It is set back to `null` when the [close] method is called.
+     */
     private var connection: Connection? = null
 
-    /** Initializes the database and creates the necessary tables if they do not exist. */
-    fun initDatabase() {
+    /** Returns the current database connection or throws an exception if there is no established connection. */
+    private val validConnection: Connection get() {
+        val conn = connection
+        check(conn != null) { "Database connection not established. Call connect() first." }
+        return conn
+    }
+
+    /**
+     * Connects to the database. This method must be called before any database operations can be made.
+     *
+     * @throws IllegalStateException if the database connection is already established.
+     */
+    @Throws(IllegalStateException::class)
+    fun connect() {
         if (connection != null) throw IllegalStateException("Database connection already established")
-        connection = DriverManager.getConnection("jdbc:sqlite:${dbFile.absolutePath}")
-        connection?.createStatement()?.use { stmt ->
-            stmt.execute(
-                """
-                CREATE TABLE IF NOT EXISTS downloads (
-                    id                  INTEGER     PRIMARY KEY AUTOINCREMENT,
-                    filename            TEXT        NOT NULL,
-                    category            TEXT        NOT NULL,
-                    title               TEXT        NOT NULL,
-                    description         TEXT        NOT NULL,
-                    file_hash           TEXT        NOT NULL
-                )
-                """.trimIndent(),
-            )
-            // Ensure a unique index exists for case-insensitive filename lookups
-            stmt.execute(
-                """
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_downloads_filename_case_insensitive
-                ON downloads(lower(filename))
-                """.trimIndent(),
-            )
+        connection = DriverManager.getConnection(dbUrl)
+    }
+
+    /**
+     * Migrates the database schema to the latest version, or in case the database is empty, initializes the schema
+     * first. If the database is already up to date, this method does nothing.
+     */
+    fun migrateDatabase() {
+        val flyway = Flyway.configure()
+            .dataSource(dbUrl, null, null)
+            .load()
+
+        Logger.getLogger("org.flywaydb.core.FlywayExecutor").level = Level.WARNING
+        // Silence Flyway logging if no migrations are pending to avoid noise during application startup
+        if (flyway.info().pending().isEmpty()) {
+            Logger.getLogger("org.flywaydb").level = Level.OFF
         }
+
+        flyway.migrate()
     }
 
     /**
@@ -48,7 +69,7 @@ class DatabaseManager(private val dbFile: File) : AutoCloseable {
      * @return `true` if the image is a duplicate, `false` otherwise.
      */
     fun isDuplicate(hash: String): Boolean {
-        connection?.prepareStatement("SELECT count(*) FROM downloads WHERE file_hash = ?")?.use { stmt ->
+        validConnection.prepareStatement("SELECT count(*) FROM downloads WHERE file_hash = ?")?.use { stmt ->
             stmt.setString(1, hash)
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
@@ -67,7 +88,7 @@ class DatabaseManager(private val dbFile: File) : AutoCloseable {
      * @return `true` if the filename is taken, `false` otherwise.
      */
     fun isFilenameTaken(filename: String) =
-        connection?.prepareStatement("SELECT 1 FROM downloads WHERE lower(filename) = lower(?)")?.use { stmt ->
+        validConnection.prepareStatement("SELECT 1 FROM downloads WHERE lower(filename) = lower(?)")?.use { stmt ->
             stmt.setString(1, filename)
             stmt.executeQuery().use(ResultSet::next)
         } == true
@@ -82,7 +103,7 @@ class DatabaseManager(private val dbFile: File) : AutoCloseable {
      * @param hash the SHA-256 hash of the image data.
      */
     fun saveToDatabase(filename: String, category: String, title: String, description: String, hash: String) {
-        connection?.prepareStatement(
+        validConnection.prepareStatement(
             "INSERT INTO downloads (filename, category, title, description, file_hash) VALUES (?, ?, ?, ?, ?)"
         )?.use { stmt ->
             stmt.setString(1, filename)

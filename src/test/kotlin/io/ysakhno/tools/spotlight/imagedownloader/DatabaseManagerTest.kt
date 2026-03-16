@@ -31,10 +31,8 @@ class DatabaseManagerTest : FunSpec({
     beforeSpec {
         dbFile = File.createTempFile("spotlight_downloader_test", ".db").also { file ->
             file.deleteOnExit()
-            DatabaseManager(file).use { mgr ->
-                mgr.initDatabase()
-                mgr.putTestData()
-            }
+            databaseManager = DatabaseManager(file.absolutePath)
+            databaseManager.use(DatabaseManager::putTestData)
         }
     }
 
@@ -44,8 +42,13 @@ class DatabaseManagerTest : FunSpec({
     }
 
     beforeTest {
-        databaseManager = DatabaseManager(requireNotNull(dbFile) { "Database file is not initialized" })
-            .apply(DatabaseManager::initDatabase)
+        /* The beforeTest lifecycle hook is invoked for containers also, which means that for the first
+         * nested test in the container it gets invoked *immediately* without invoking afterTest hook first.
+         * This leads to the connection not getting properly closed on the old DatabaseManager
+         * when a new instance is created, so closing it here explicitly. */
+        databaseManager.close()
+        databaseManager = DatabaseManager(requireNotNull(dbFile).absolutePath)
+            .apply(DatabaseManager::connect)
     }
 
     afterTest {
@@ -83,6 +86,8 @@ class DatabaseManagerTest : FunSpec({
 
 /** Populates the database with predefined test data. */
 private fun DatabaseManager.putTestData() {
+    migrateDatabase()
+    connect()
     saveToDatabase("TestImage.jpg", "Tests", "Test Image", "Test of case-insensitive search", "hash123")
     saveToDatabase("Test.jpg", "Cats", "Kitten", "", "hash999")
 }
