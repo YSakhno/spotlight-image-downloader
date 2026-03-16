@@ -70,11 +70,8 @@ class ImageFileDownloader(
         while (true) {
             val filename = "${baseName}${suffix}.jpg"
             // Check database for name collision
-            when (dbManager.getHashByFilename(filename)) {
-                null -> return filename // Name is free in the database
-                hash -> return filename // File with this name was already saved
-                else -> suffix = "-${counter++}" // Collision with a different file, increment breaker suffix
-            }
+            if (!dbManager.isFilenameTaken(filename)) return filename
+            else suffix = "-${counter++}" // Collision with a different file, increment breaker suffix
         }
     }
 }

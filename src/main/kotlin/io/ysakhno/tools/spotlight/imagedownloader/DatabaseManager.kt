@@ -3,6 +3,7 @@ package io.ysakhno.tools.spotlight.imagedownloader
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
 
 /**
  * Manages the SQLite database used to store information about downloaded images.
@@ -30,6 +31,13 @@ class DatabaseManager(private val dbFile: File) : AutoCloseable {
                 )
                 """.trimIndent(),
             )
+            // Ensure a unique index exists for case-insensitive filename lookups
+            stmt.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_downloads_filename_case_insensitive
+                ON downloads(lower(filename))
+                """.trimIndent(),
+            )
         }
     }
 
@@ -52,22 +60,17 @@ class DatabaseManager(private val dbFile: File) : AutoCloseable {
     }
 
     /**
-     * Retrieves the hash of an image by its filename.
+     * Checks whether a file with the specific [filename] was already saved, and therefore the name is now considered
+     * taken (cannot be used for another file).
      *
-     * @param filename the name of the file to search for.
-     * @return the SHA-256 hash of the image if found, or `null` otherwise.
+     * @param filename the filename to check.
+     * @return `true` if the filename is taken, `false` otherwise.
      */
-    fun getHashByFilename(filename: String): String? {
-        connection?.prepareStatement("SELECT file_hash FROM downloads WHERE filename = ?")?.use { stmt ->
+    fun isFilenameTaken(filename: String) =
+        connection?.prepareStatement("SELECT 1 FROM downloads WHERE lower(filename) = lower(?)")?.use { stmt ->
             stmt.setString(1, filename)
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    return rs.getString("file_hash")
-                }
-            }
-        }
-        return null
-    }
+            stmt.executeQuery().use(ResultSet::next)
+        } == true
 
     /**
      * Saves information about a downloaded image to the database.
