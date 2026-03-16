@@ -20,6 +20,23 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.jar {
+    archiveBaseName.set(rootProject.name)
+
+    manifest {
+        attributes(
+            mapOf(
+                "Built-By" to "Gradle ${gradle.gradleVersion}",
+                "Created-By" to "Yurii Sakhno",
+                "Implementation-Title" to "Spotlight Image Downloader",
+                "Implementation-Version" to project.version,
+                "Implementation-Vendor-Id" to project.group,
+                "Implementation-Vendor" to "Yurii Sakhno",
+            )
+        )
+    }
+}
+
 application {
     mainClass = "io.ysakhno.tools.spotlight.imagedownloader.AppKt"
 }

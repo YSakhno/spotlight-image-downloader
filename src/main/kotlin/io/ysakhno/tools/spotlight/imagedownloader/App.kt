@@ -3,6 +3,8 @@ package io.ysakhno.tools.spotlight.imagedownloader
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.help
+import com.github.ajalt.clikt.parameters.options.versionOption
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.jsoup.Jsoup
@@ -15,8 +17,17 @@ import kotlin.system.exitProcess
  *
  * @author Yurii Sakhno
  */
-class App : CliktCommand() {
-    private val initialUrl by argument()
+class App : CliktCommand(name = "spotlight-image-downloader") {
+
+    /**
+     * Stores the initial URL from which the web scraping process starts. This URL is received from the command line
+     * argument.
+     */
+    private val initialUrl by argument(name = "initial-url")
+        .help(
+            "The initial URL to start scraping from" +
+                " (this page must contain the list of Categories, not the particular category)",
+        )
 
     private val downloadsDir = File("downloads")
     private val dbFile = File("spotlight_downloader.db")
@@ -30,8 +41,15 @@ class App : CliktCommand() {
         downloader = downloader,
     )
 
+    init {
+        versionOption(version = AppVersion.version, message = { AppVersion.nameAndVersion })
+    }
+
     /** Executes the application's main logic. */
     override fun run() {
+        echo(AppVersion.fullName)
+        echo()
+
         if (!downloadsDir.exists()) {
             downloadsDir.mkdirs()
         }
