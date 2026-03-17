@@ -1,7 +1,12 @@
+import io.gitlab.arturbosch.detekt.Detekt
+
 plugins {
     kotlin("jvm") version "2.3.10"
     id("io.kotest") version "6.1.7"
+
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jmailen.kotlinter") version "5.4.2"
+
     application
     id("com.gradleup.shadow") version "9.4.0"
 }
@@ -32,6 +37,21 @@ kotlinter {
     ignoreFormatFailures = false
     ignoreLintFailures = false
     reporters = arrayOf("plain", "checkstyle", "html")
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.from("${rootProject.projectDir}/detekt.yaml")
+    ignoreFailures = false
+    parallel = true
+}
+
+tasks.detekt.configure {
+    val typeResolutionDetektTasks = tasks.withType<Detekt>()
+        .filter { it.project == project }
+        .filter { it.name != name }
+
+    dependsOn(typeResolutionDetektTasks)
 }
 
 tasks.jar {

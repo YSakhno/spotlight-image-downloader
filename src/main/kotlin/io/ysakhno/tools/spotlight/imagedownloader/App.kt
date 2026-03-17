@@ -1,13 +1,15 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
 import com.github.ajalt.clikt.parameters.options.versionOption
 import java.io.File
 import java.io.FileWriter
-import kotlin.system.exitProcess
+import java.io.PrintWriter
+import java.io.StringWriter
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.jsoup.Jsoup
@@ -54,7 +56,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
             downloadsDir.mkdirs()
         }
 
-        try {
+        val executionOutcome = runCatching {
             // Prepare the database and connect to it
             dbManager.migrateDatabase()
             dbManager.connect()
@@ -63,20 +65,25 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
             println()
             generateSummaries()
             printFinalStats()
-        } catch (e: Exception) {
-            System.err.println("Fatal error: ${e.message}")
-            e.printStackTrace()
-            exitProcess(1)
-        } finally {
-            dbManager.close()
+        }.recoverCatching { throwable ->
+            echo("Fatal error: ${throwable.message}", err = true)
+            echo(
+                message = StringWriter().apply { throwable.printStackTrace(PrintWriter(this)) },
+                err = true,
+            )
+            throw ProgramResult(1)
         }
+
+        dbManager.close()
+        executionOutcome.getOrThrow()
     }
 
     private fun generateSummaries() {
         for ((category, files) in processingStats.newFilesByCategory) {
             val safeCategory = category.replace(Regex("[ -]"), "_")
             val csvFile = File("$safeCategory.csv")
-            try {
+
+            runCatching {
                 FileWriter(csvFile).use { writer ->
                     val printer = CSVPrinter(
                         writer,
@@ -87,8 +94,8 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
                     }
                     printer.flush()
                 }
-            } catch (e: Exception) {
-                processingStats.reportError("Error generating summary for category $category: ${e.message}")
+            }.onFailure { throwable ->
+                processingStats.reportError("Error generating summary for category $category: ${throwable.message}")
             }
         }
     }
@@ -105,9 +112,11 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         }
 
         if (processingStats.errorCount > 0) {
-            System.err.println("\nExecution finished with ${processingStats.errorCount} errors.")
+            echo("", err = true)
+            echo("Execution finished with ${processingStats.errorCount} errors.", err = true)
         } else {
-            println("\nExecution finished successfully.")
+            echo()
+            echo("Execution finished successfully.")
         }
     }
 }

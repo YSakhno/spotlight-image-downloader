@@ -46,7 +46,7 @@ class ImageFileDownloader(
             return DownloadResult.DUPLICATE
         }
 
-        val filename = generateFilename(categoryName, imageName, imgHash)
+        val filename = generateFilename(categoryName, imageName)
         val file = File(downloadsDir, filename)
         Files.write(file.toPath(), imgData)
 
@@ -57,10 +57,7 @@ class ImageFileDownloader(
         return DownloadResult.SAVED
     }
 
-    private val ByteArray.hashStrSha256
-        get() = MessageDigest.getInstance("SHA-256").digest(this).joinToString("") { "%02x".format(it) }
-
-    private fun generateFilename(categoryName: String, title: String, hash: String): String {
+    private fun generateFilename(categoryName: String, title: String): String {
         val safeCategory = categoryName.replace(Regex("[ -]"), "_")
         val safeTitle = title.replace(Regex("[ -]"), "_")
         val baseName = "$safeCategory-$safeTitle"
@@ -75,3 +72,7 @@ class ImageFileDownloader(
         }
     }
 }
+
+/** Computes the SHA-256 hash of the bytes stored in this array and returns that hash as a hexadecimal string. */
+private val ByteArray.hashStrSha256
+    get() = MessageDigest.getInstance("SHA-256").digest(this).joinToString("") { "%02x".format(it) }

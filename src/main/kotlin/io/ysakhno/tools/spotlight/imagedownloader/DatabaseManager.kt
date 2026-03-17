@@ -40,7 +40,7 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
      */
     @Throws(IllegalStateException::class)
     fun connect() {
-        if (connection != null) throw IllegalStateException("Database connection already established")
+        check(connection == null) { "Database connection already established" }
         connection = DriverManager.getConnection(dbUrl)
     }
 
@@ -103,6 +103,7 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
      * @param hash the SHA-256 hash of the image data.
      */
     fun saveToDatabase(filename: String, category: String, title: String, description: String, hash: String) {
+        @Suppress("detekt:style:MagicNumber") // SQL parameter indexes do not need constants
         validConnection.prepareStatement(
             "INSERT INTO downloads (filename, category, title, description, file_hash) VALUES (?, ?, ?, ?, ?)",
         )?.use { stmt ->

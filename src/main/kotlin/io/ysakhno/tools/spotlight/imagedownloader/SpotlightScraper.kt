@@ -37,7 +37,8 @@ class SpotlightScraper(
                     processCategoryPage(categoryUrl, categoryName)
                 }
             }
-        }.onFailure { throwable ->
+        }
+        .onFailure { throwable ->
             println(" ERROR")
             processingStats.reportError("Could not process initial page $url: ${throwable.message}")
         }
@@ -81,6 +82,10 @@ class SpotlightScraper(
      * @param categoryName the name of the category the image belongs to.
      * @param imageName the base name for the image file.
      */
+    @Suppress(
+        "detekt:potential-bugs:UnreachableCode", // seems to be false positive
+        "detekt:style:ThrowsCount", // guard clauses should be perfectly fine, yet Detekt seems to have a bug
+    )
     fun processImagePage(url: String, categoryName: String, imageName: String) {
         if (processingStats.isProcessedEnough) return
 

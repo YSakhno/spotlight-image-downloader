@@ -1,0 +1,248 @@
+#
+# This file is a configuration file for Detekt, which overrides the default configuration of some rules. In particular,
+# most of the rules that are disabled in default configuration are enabled here, but also some other rules have their
+# configuration tweaked to better serve the needs and style of the application.
+#
+# Only rules that have to be overridden are explicitly mentioned in this file. Rules not explicitly mentioned will have
+# their default values retained.
+#
+
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: true
+  checkExhaustiveness: false  # Do not care about omitted sections in this file — they will be set to default values
+
+comments:
+  DeprecatedBlockTag:
+    active: true
+  EndOfSentenceFormat:
+    active: true
+  KDocReferencesNonPublicProperty:
+    active: true
+    excludes: &testFolders
+      - "**/src/test/kotlin/**"
+      - "**/src/testFixtures/kotlin/**"
+      - "**/src/*Test/kotlin/**"
+  OutdatedDocumentation:
+    active: true
+  UndocumentedPublicClass:
+    active: true
+    excludes: []  # Public and protected classes should be documented everywhere
+    searchInProtectedClass: true  # Protected classes are 'public' as far as documentation is concerned
+  UndocumentedPublicFunction:
+    active: true
+    excludes: []  # Same as with classes
+    searchProtectedFunction: true
+  UndocumentedPublicProperty:
+    active: true
+    excludes: []  # Same as with classes and functions
+    searchProtectedProperty: true
+
+complexity:
+  ComplexInterface:
+    active: true
+  LargeClass:
+    excludes: *testFolders  # Test classes can be big, huge even
+  MethodOverloading:
+    active: true
+    excludes: *testFolders  # Helper methods in tests can be overloaded as many times as necessary
+  NamedArguments:
+    excludes: *testFolders  # The rule does not work well with Property-based checkers of Kotest
+  NestedBlockDepth:
+    threshold: 5  # Slightly tweaking the threshold (default is 4)
+  NestedScopeFunctions:
+    active: true
+  TooManyFunctions:
+    # The point of private functions is to extract logic out of other functions, reducing the complexity of the latter,
+    # which directly influences NestedBlockDepth (see above). Having 'private' functions outside the file/class
+    # violates encapsulation (since they cannot be private anymore). Because of this, private functions must be
+    # excluded from the total count (i.e., ignored).
+    ignorePrivate: true
+
+coroutines:
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunSwallowedCancellation:
+    active: true
+  SuspendFunWithCoroutineScopeReceiver:
+    active: true
+
+exceptions:
+  InstanceOfCheckForException:
+    excludes: []  # Tests should also check exception instances using dedicated checking functions
+  NotImplementedDeclaration:
+    active: true  # It is a good idea to not have any TODOs in the code
+  ObjectExtendsThrowable:
+    active: true
+  SwallowedException:
+    allowedExceptionNameRegex: "_|(?:ignored?|expected).*"
+  ThrowingExceptionInMain:
+    active: true
+  TooGenericExceptionCaught:
+    excludes: []  # Tests should generally not catch exceptions at all (at least, not explicitly)
+    allowedExceptionNameRegex: "_|(?:ignored?|expected).*"
+
+naming:
+  BooleanPropertyNaming:
+    active: true
+    allowedPattern: "^(?:is|are|has|was|were|can|cannot)"  # Also allow “was”/“were” (past of “is”/“are” respectively)
+    excludes: *testFolders  # Do not care about Boolean variables/properties names in test sources
+  ForbiddenClassName:
+    active: true
+    forbiddenName: ["Default", "Impl"]  # These are 'the worst'
+  FunctionMaxLength:
+    active: true
+    maximumFunctionNameLength: 42  # a nice number (also should be large enough for most if not all purposes)
+  FunctionMinLength:
+    active: true
+    ignoreFunction: ["get", "let", "map", "put", "run", "set"]
+    minimumFunctionNameLength: 4
+  LambdaParameterNaming:
+    active: true
+  NonBooleanPropertyPrefixedWithIs:
+    active: true
+  VariableMaxLength:
+    active: true
+
+performance:
+  CouldBeSequence:
+    active: true
+  UnnecessaryPartOfBinaryExpression:
+    active: true
+
+potential-bugs:
+  CastNullableToNonNullableType:
+    active: true
+  CastToNullableType:
+    active: true
+  Deprecation:
+    active: true
+  DontDowncastCollectionTypes:
+    active: true
+  ExitOutsideMain:
+    active: true
+  MissingPackageDeclaration:
+    active: true
+  NullCheckOnMutableProperty:
+    active: true
+  NullableToStringCall:
+    active: true
+  PropertyUsedBeforeDeclaration:
+    active: true
+  UnconditionalJumpStatementInLoop:
+    active: true
+  UnnecessaryNotNullCheck:
+    active: true
+
+style:
+  AlsoCouldBeApply:
+    active: true
+  BracesOnIfStatements:
+    active: true
+    multiLine: "consistent"
+  BracesOnWhenStatements:
+    active: true
+    multiLine: "necessary"
+  CanBeNonNullable:
+    active: true
+  CascadingCallWrapping:
+    active: true
+    includeElvis: false  # Do not like the looks of Elvis operator being wrapped in chained calls
+  ClassOrdering:
+    active: true
+  CollapsibleIfStatements:
+    active: true
+  DataClassContainsFunctions:
+    active: true
+    conversionFunctionPrefix: ["as", "to"]
+  DataClassShouldBeImmutable:
+    active: true
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 4  # 3 is a bit on the low side, 4 should still be fine
+    excludes: *testFolders  # Tests can have as many entries per declaration as needed
+  DoubleNegativeLambda:
+    active: true
+  EqualsOnSignatureLine:
+    active: true
+  ExplicitCollectionElementAccessMethod:
+    active: true
+  ExpressionBodySyntax:
+    active: true
+    includeLineWrapping: true
+  ForbiddenAnnotation:
+    active: true
+  LoopWithTooManyJumpStatements:
+    maxJumpCount: 2  # Because 1 seems like too few
+  MagicNumber:
+    ignoreCompanionObjectPropertyDeclaration: false
+    ignoreNamedArgument: false
+    ignoreExtensionFunctions: false
+    excludes: *testFolders
+  MandatoryBracesLoops:
+    active: true  # Loops, unlike 'if's and 'when's, should always use braces
+  MultilineLambdaItParameter:
+    active: true
+  MultilineRawStringIndentation:
+    active: true
+  NoTabs:
+    active: true  # No tabs indeed
+  NullableBooleanCheck:
+    active: true
+  OptionalUnit:
+    active: true
+    excludes: *testFolders
+  PreferToOverPairSyntax:
+    active: true
+  RedundantExplicitType:
+    active: true
+  RedundantVisibilityModifierRule:
+    active: true
+  ReturnCount:
+    max: 3  # The default of 2 seems arbitrary anyway, so 3 should be fine too
+    excludeGuardClauses: true  # By my standards, returns in guard clauses should not count
+  SpacingBetweenPackageAndImports:
+    active: true
+  StringShouldBeRawString:
+    active: true
+  TrailingWhitespace:
+    active: true
+  TrimMultilineRawString:
+    active: true
+    excludes: *testFolders
+  UnderscoresInNumericLiterals:
+    active: true
+    acceptableLength: 4  # Start requesting underscores right after ten thousand (10,000)
+  UnnecessaryAnnotationUseSiteTarget:
+    active: true
+  UnnecessaryBackticks:
+    active: true
+  UnnecessaryBracesAroundTrailingLambda:
+    active: true
+  UnnecessaryInnerClass:
+    active: true
+  UnnecessaryLet:
+    active: true
+  UntilInsteadOfRangeTo:
+    active: true
+  UnusedImports:
+    active: true
+  UnusedParameter:
+    allowedNames: "ignored|unused"
+  UseDataClass:
+    active: true
+  UseEmptyCounterpart:
+    active: true
+  UseIfEmptyOrIfBlank:
+    active: true
+  UseIfInsteadOfWhen:
+    active: true
+  UseLet:
+    active: true
+  UseSumOfInsteadOfFlatMapSize:
+    active: true
+  WildcardImport:
+    excludeImports: []  # No star-imports are allowed at all
