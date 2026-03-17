@@ -1,5 +1,7 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
+import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
+
 /** Tracks the statistics and progress of the image downloading and processing. */
 class ProcessingStats(
     /**
@@ -28,15 +30,10 @@ class ProcessingStats(
     /** A map of category names to a list of information about the files downloaded in each category. */
     val newFilesByCategory = mutableMapOf<String, MutableList<DownloadedFileInfo>>()
 
-    /**
-     * Adds information about a newly downloaded file to the statistics.
-     *
-     * @param categoryName the name of the category the image belongs to.
-     * @param info the information about the downloaded file.
-     */
-    fun addDownloadedFile(categoryName: String, info: DownloadedFileInfo) {
-        newFilesByCategory.getOrPut(categoryName) { mutableListOf() }.add(info)
-        categoriesWithNewFiles.add(categoryName)
+    /** Adds information about a newly downloaded file to the statistics. */
+    fun addDownloadedFile(info: DownloadedFileInfo) {
+        newFilesByCategory.getOrPut(info.category) { mutableListOf() }.add(info)
+        categoriesWithNewFiles.add(info.category)
         downloadedCount++
     }
 

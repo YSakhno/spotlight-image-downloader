@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import java.io.File
 import java.sql.SQLException
 
@@ -77,8 +78,9 @@ class DatabaseManagerTest : FunSpec({
 
     context("Method saveToDatabase") {
         test("should throw an exception when the filename violates the unique case-insensitive index") {
+            val preparedInfo = DownloadedFileInfo("hash2", "test.jpg", "Dogs", "Doggy", "Puppy", "pup")
             shouldThrow<SQLException> {
-                databaseManager.saveToDatabase("test.jpg", "Dogs", "Puppy", "pup", "hash2")
+                databaseManager.saveToDatabase(preparedInfo)
             }
         }
     }
@@ -88,6 +90,15 @@ class DatabaseManagerTest : FunSpec({
 private fun DatabaseManager.putTestData() {
     migrateDatabase()
     connect()
-    saveToDatabase("TestImage.jpg", "Tests", "Test Image", "Test of case-insensitive search", "hash123")
-    saveToDatabase("Test.jpg", "Cats", "Kitten", "", "hash999")
+    saveToDatabase(
+        DownloadedFileInfo(
+            "hash123",
+            "TestImage.jpg",
+            "Tests",
+            "Test",
+            "Test Image",
+            "Test of case-insensitive search",
+        ),
+    )
+    saveToDatabase(DownloadedFileInfo("hash999", "Test.jpg", "Cats", "Cat", "Kitten", ""))
 }

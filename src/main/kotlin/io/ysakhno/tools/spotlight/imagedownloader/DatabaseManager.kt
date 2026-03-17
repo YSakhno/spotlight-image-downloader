@@ -1,5 +1,6 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
+import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
@@ -62,22 +63,28 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
         flyway.migrate()
     }
 
-    /**
-     * Checks if an image with the given hash has already been downloaded.
-     *
-     * @param hash the SHA-256 hash of the image data.
-     * @return `true` if the image is a duplicate, `false` otherwise.
-     */
-    fun isDuplicate(hash: String): Boolean {
-        validConnection.prepareStatement("SELECT count(*) FROM downloads WHERE file_hash = ?")?.use { stmt ->
+    /** Retrieves information about a downloaded image by its SHA-256 [hash], or `null` if the record is not found. */
+    fun getDownloadInfoByHash(hash: String): DownloadedFileInfo? {
+        validConnection.prepareStatement(
+            """
+                SELECT filename, category, image_name, title, description
+                  FROM downloads
+                 WHERE file_hash = ?
+            """.trimIndent(),
+        )?.use { stmt ->
             stmt.setString(1, hash)
             stmt.executeQuery().use { rs ->
                 if (rs.next()) {
-                    return rs.getInt(1) > 0
+                    val filename = rs.getString("filename")
+                    val categoryName = rs.getString("category")
+                    val imageName = rs.getString("image_name")
+                    val title = rs.getString("title")
+                    val description = rs.getString("description")
+                    return DownloadedFileInfo(hash, filename, categoryName, imageName, title, description)
                 }
             }
         }
-        return false
+        return null
     }
 
     /**
@@ -93,25 +100,21 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
             stmt.executeQuery().use(ResultSet::next)
         } == true
 
-    /**
-     * Saves information about a downloaded image to the database.
-     *
-     * @param filename the name of the saved file.
-     * @param category the name of the category the image belongs to.
-     * @param title the title of the image.
-     * @param description a description of the image.
-     * @param hash the SHA-256 hash of the image data.
-     */
-    fun saveToDatabase(filename: String, category: String, title: String, description: String, hash: String) {
+    /** Saves information about a downloaded image file to the database. */
+    fun saveToDatabase(info: DownloadedFileInfo) {
         @Suppress("detekt:style:MagicNumber") // SQL parameter indexes do not need constants
         validConnection.prepareStatement(
-            "INSERT INTO downloads (filename, category, title, description, file_hash) VALUES (?, ?, ?, ?, ?)",
+            """
+                INSERT INTO downloads (file_hash, filename, category, image_name, title, description)
+                    VALUES (?, ?, ?, ?, ?, ?)
+            """.trimIndent(),
         )?.use { stmt ->
-            stmt.setString(1, filename)
-            stmt.setString(2, category)
-            stmt.setString(3, title)
-            stmt.setString(4, description)
-            stmt.setString(5, hash)
+            stmt.setString(1, info.hash)
+            stmt.setString(2, info.filename)
+            stmt.setString(3, info.category)
+            stmt.setString(4, info.imageName)
+            stmt.setString(5, info.title)
+            stmt.setString(6, info.description)
             stmt.executeUpdate()
         }
     }

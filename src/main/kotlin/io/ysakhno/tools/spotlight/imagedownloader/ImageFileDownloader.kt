@@ -1,5 +1,6 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
+import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest
@@ -41,20 +42,28 @@ class ImageFileDownloader(
         val imgData = response.bodyAsBytes()
         val imgHash = imgData.hashStrSha256
 
-        if (dbManager.isDuplicate(imgHash)) {
+        dbManager.getDownloadInfoByHash(imgHash)?.let { info ->
             processingStats.incrementSkipped()
-            return DownloadResult.DUPLICATE
+            return DownloadResult.Duplicate(info)
         }
 
         val filename = generateFilename(categoryName, imageName)
         val file = File(downloadsDir, filename)
         Files.write(file.toPath(), imgData)
 
-        dbManager.saveToDatabase(filename, categoryName, title, description, imgHash)
+        val info = DownloadedFileInfo(
+            hash = imgHash,
+            filename = filename,
+            category = categoryName,
+            imageName = imageName,
+            title = title,
+            description = description,
+        )
 
-        val info = DownloadedFileInfo(filename, categoryName, title, description, imgHash)
-        processingStats.addDownloadedFile(categoryName, info)
-        return DownloadResult.SAVED
+        dbManager.saveToDatabase(info)
+        processingStats.addDownloadedFile(info)
+
+        return DownloadResult.Saved(info)
     }
 
     private fun generateFilename(categoryName: String, title: String): String {
