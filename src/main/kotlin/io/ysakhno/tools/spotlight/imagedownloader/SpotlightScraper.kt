@@ -51,7 +51,7 @@ class SpotlightScraper(
      * @param categoryName the name of the category being processed.
      */
     fun processCategoryPage(url: String, categoryName: String) {
-        if (processingStats.isProcessedEnough) return
+        if (processingStats.isDownloadsLimitReached) return
 
         runCatching {
             print("Category $categoryName...")
@@ -87,7 +87,7 @@ class SpotlightScraper(
         "detekt:style:ThrowsCount", // guard clauses should be perfectly fine, yet Detekt seems to have a bug
     )
     fun processImagePage(url: String, categoryName: String, imageName: String) {
-        if (processingStats.isProcessedEnough) return
+        if (processingStats.isDownloadsLimitReached) return
 
         runCatching {
             print("  Downloading image $imageName...")

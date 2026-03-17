@@ -1,7 +1,12 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
 /** Tracks the statistics and progress of the image downloading and processing. */
-class ProcessingStats {
+class ProcessingStats(
+    /**
+     * The maximum number of images allowed to be downloaded in the current run. A `null` value indicates no limit.
+     */
+    private val maxDownloadsPerRun: Int? = null,
+) {
     /** The number of images successfully downloaded in the current run. */
     var downloadedCount = 0
         private set
@@ -14,8 +19,8 @@ class ProcessingStats {
     var errorCount: Int = 0
         private set
 
-    /** Indicates whether enough images have been processed to satisfy the current run's requirements. */
-    val isProcessedEnough get() = downloadedCount > 0
+    /** Indicates whether the download limit for the current run has been reached. */
+    val isDownloadsLimitReached get() = maxDownloadsPerRun != null && downloadedCount >= maxDownloadsPerRun
 
     /** The set of category names for which at least one new image was downloaded. */
     val categoriesWithNewFiles = mutableSetOf<String>()

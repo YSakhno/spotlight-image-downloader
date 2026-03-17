@@ -5,7 +5,11 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
+import com.github.ajalt.clikt.parameters.options.help
+import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
+import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.restrictTo
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -31,17 +35,25 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
                 " (this page must contain the list of Categories, not the particular category)",
         )
 
+    /** The maximum number of images to download in a single run. This limit is set by a hidden command line option. */
+    private val maxDownloadsPerRun by option("--max-downloads-per-run", hidden = true)
+        .int()
+        .restrictTo(min = 1)
+        .help("The maximum number of images to download in a run")
+
     private val downloadsDir = File("downloads")
     private val dbFile = File("spotlight_downloader.db")
     private val dbManager = DatabaseManager(dbFile.absolutePath)
-    private val processingStats = ProcessingStats()
+    private val processingStats by lazy { ProcessingStats(maxDownloadsPerRun) }
     private val httpSession = Jsoup.newSession()
-    private val downloader = ImageFileDownloader(processingStats, httpSession, dbManager, downloadsDir)
-    private val scraper = SpotlightScraper(
-        processingStats = processingStats,
-        httpSession = httpSession,
-        downloader = downloader,
-    )
+    private val downloader by lazy { ImageFileDownloader(processingStats, httpSession, dbManager, downloadsDir) }
+    private val scraper by lazy {
+        SpotlightScraper(
+            processingStats = processingStats,
+            httpSession = httpSession,
+            downloader = downloader,
+        )
+    }
 
     init {
         versionOption(version = AppVersion.version, message = { AppVersion.nameAndVersion })
