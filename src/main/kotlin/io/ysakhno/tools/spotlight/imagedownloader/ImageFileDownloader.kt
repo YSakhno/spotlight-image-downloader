@@ -1,9 +1,9 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
-import org.jsoup.Connection
 import java.io.File
 import java.nio.file.Files
 import java.security.MessageDigest
+import org.jsoup.Connection
 
 /**
  * Handles the downloading of actual image files from a Web server.
@@ -63,12 +63,12 @@ class ImageFileDownloader(
     private fun generateFilename(categoryName: String, title: String, hash: String): String {
         val safeCategory = categoryName.replace(Regex("[ -]"), "_")
         val safeTitle = title.replace(Regex("[ -]"), "_")
-        val baseName = "${safeCategory}-${safeTitle}"
+        val baseName = "$safeCategory-$safeTitle"
         var suffix = ""
         var counter = 2
 
         while (true) {
-            val filename = "${baseName}${suffix}.jpg"
+            val filename = "$baseName$suffix.jpg"
             // Check database for name collision
             if (!dbManager.isFilenameTaken(filename)) return filename
             else suffix = "-${counter++}" // Collision with a different file, increment breaker suffix

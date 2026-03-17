@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.10"
     id("io.kotest") version "6.1.7"
+    id("org.jmailen.kotlinter") version "5.4.2"
     application
     id("com.gradleup.shadow") version "9.4.0"
 }
@@ -24,6 +25,13 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+kotlinter {
+    ktlintVersion = "1.8.0"
+    ignoreFormatFailures = false
+    ignoreLintFailures = false
+    reporters = arrayOf("plain", "checkstyle", "html")
 }
 
 tasks.jar {

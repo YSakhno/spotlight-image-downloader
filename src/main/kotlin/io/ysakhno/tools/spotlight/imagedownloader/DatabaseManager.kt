@@ -104,7 +104,7 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
      */
     fun saveToDatabase(filename: String, category: String, title: String, description: String, hash: String) {
         validConnection.prepareStatement(
-            "INSERT INTO downloads (filename, category, title, description, file_hash) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO downloads (filename, category, title, description, file_hash) VALUES (?, ?, ?, ?, ?)",
         )?.use { stmt ->
             stmt.setString(1, filename)
             stmt.setString(2, category)

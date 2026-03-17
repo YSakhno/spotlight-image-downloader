@@ -5,12 +5,12 @@ import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
 import com.github.ajalt.clikt.parameters.options.versionOption
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVPrinter
-import org.jsoup.Jsoup
 import java.io.File
 import java.io.FileWriter
 import kotlin.system.exitProcess
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVPrinter
+import org.jsoup.Jsoup
 
 /**
  * Main class for the Spotlight image downloader application.
@@ -75,7 +75,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
     private fun generateSummaries() {
         for ((category, files) in processingStats.newFilesByCategory) {
             val safeCategory = category.replace(Regex("[ -]"), "_")
-            val csvFile = File("${safeCategory}.csv")
+            val csvFile = File("$safeCategory.csv")
             try {
                 FileWriter(csvFile).use { writer ->
                     val printer = CSVPrinter(
