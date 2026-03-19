@@ -42,6 +42,7 @@ class SpotlightScraper(
             println(" ERROR")
             processingStats.reportError("Could not process initial page $url: ${throwable.message}")
         }
+        .getOrDefault(Unit)
 
     /**
      * Processes a category page to find all images within that category, and then goes on to actually downloading
@@ -72,7 +73,7 @@ class SpotlightScraper(
                     processImagePage(imagePageUrl, categoryName, imageName)
                 }
             }
-        }
+        }.getOrDefault(Unit)
     }
 
     /**

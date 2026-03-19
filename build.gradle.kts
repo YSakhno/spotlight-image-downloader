@@ -1,4 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     kotlin("jvm") version "2.3.10"
@@ -25,7 +26,15 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(21)
+    compilerOptions {
+        allWarningsAsErrors = true
+        freeCompilerArgs.add("-Xexplicit-backing-fields")
+        freeCompilerArgs.add("-Xreturn-value-checker=full")
+        jvmTarget = JvmTarget.fromTarget("21")
+    }
+    jvmToolchain {
+        languageVersion = JavaLanguageVersion.of("21")
+    }
 }
 
 tasks.withType<Test>().configureEach {

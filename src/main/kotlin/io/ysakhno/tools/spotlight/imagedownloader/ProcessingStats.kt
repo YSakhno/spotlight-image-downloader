@@ -24,16 +24,16 @@ class ProcessingStats(
     /** Indicates whether the download limit for the current run has been reached. */
     val isDownloadsLimitReached get() = maxDownloadsPerRun != null && downloadedCount >= maxDownloadsPerRun
 
-    /** The set of category names for which at least one new image was downloaded. */
-    val categoriesWithNewFiles = mutableSetOf<String>()
-
     /** A map of category names to a list of information about the files downloaded in each category. */
-    val newFilesByCategory = mutableMapOf<String, MutableList<DownloadedFileInfo>>()
+    val newFilesByCategory: Map<String, List<DownloadedFileInfo>>
+        field = mutableMapOf<String, MutableList<DownloadedFileInfo>>()
+
+    /** The set of category names for which at least one new image was downloaded. */
+    val categoriesWithNewFiles: Set<String> get() = newFilesByCategory.keys
 
     /** Adds information about a newly downloaded file to the statistics. */
     fun addDownloadedFile(info: DownloadedFileInfo) {
         newFilesByCategory.getOrPut(info.category) { mutableListOf() }.add(info)
-        categoriesWithNewFiles.add(info.category)
         downloadedCount++
     }
 
