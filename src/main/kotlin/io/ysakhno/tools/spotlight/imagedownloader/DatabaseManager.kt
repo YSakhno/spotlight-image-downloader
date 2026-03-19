@@ -52,6 +52,7 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
     fun migrateDatabase() {
         val flyway = Flyway.configure()
             .dataSource(dbUrl, null, null)
+            .mixed(true)
             .load()
 
         Logger.getLogger("org.flywaydb.core.FlywayExecutor").level = Level.WARNING
@@ -67,7 +68,7 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
     fun getDownloadInfoByHash(hash: String): DownloadedFileInfo? {
         validConnection.prepareStatement(
             """
-                SELECT filename, category, image_name, title, description
+                SELECT filename, category, image_name, title, description, download_time, last_modified_time
                   FROM downloads
                  WHERE file_hash = ?
             """.trimIndent(),
@@ -80,7 +81,18 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
                     val imageName = rs.getString("image_name")
                     val title = rs.getString("title")
                     val description = rs.getString("description")
-                    return DownloadedFileInfo(hash, filename, categoryName, imageName, title, description)
+                    val downloadTime = rs.getString("download_time")
+                    val lastModifiedTime = rs.getString("last_modified_time")
+                    return DownloadedFileInfo(
+                        hash = hash,
+                        filename = filename,
+                        category = categoryName,
+                        imageName = imageName,
+                        title = title,
+                        description = description,
+                        downloadTime = downloadTime,
+                        lastModifiedTime = lastModifiedTime,
+                    )
                 }
             }
         }
@@ -105,8 +117,9 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
         @Suppress("detekt:style:MagicNumber") // SQL parameter indexes do not need constants
         validConnection.prepareStatement(
             """
-                INSERT INTO downloads (file_hash, filename, category, image_name, title, description)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO downloads (
+                    file_hash, filename, category, image_name, title, description, download_time, last_modified_time
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
         )?.use { stmt ->
             stmt.setString(1, info.hash)
@@ -115,6 +128,8 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
             stmt.setString(4, info.imageName)
             stmt.setString(5, info.title)
             stmt.setString(6, info.description)
+            stmt.setString(7, info.downloadTime)
+            stmt.setString(8, info.lastModifiedTime)
             stmt.executeUpdate()
         }
     }

@@ -3,7 +3,11 @@ package io.ysakhno.tools.spotlight.imagedownloader
 import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.attribute.FileTime
 import java.security.MessageDigest
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit.MILLIS
 import org.jsoup.Connection
 
 /**
@@ -47,9 +51,17 @@ class ImageFileDownloader(
             return DownloadResult.Duplicate(info)
         }
 
+        val lastModifiedHeader = response.header("Last-Modified")
+        val lastModifiedTimestamp = lastModifiedHeader?.runCatching {
+            Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(this))
+        }?.getOrNull()
+
         val filename = generateFilename(categoryName, imageName)
         val file = File(downloadsDir, filename)
-        Files.write(file.toPath(), imgData)
+        val path = file.toPath()
+
+        Files.write(path, imgData)
+        if (lastModifiedTimestamp != null) Files.setLastModifiedTime(path, lastModifiedTimestamp.toFileTime())
 
         val info = DownloadedFileInfo(
             hash = imgHash,
@@ -58,6 +70,8 @@ class ImageFileDownloader(
             imageName = imageName,
             title = title,
             description = description,
+            downloadTime = Instant.now().truncatedTo(MILLIS).toString(),
+            lastModifiedTime = lastModifiedTimestamp?.toString(),
         )
 
         dbManager.saveToDatabase(info)
@@ -85,3 +99,6 @@ class ImageFileDownloader(
 /** Computes the SHA-256 hash of the bytes stored in this array and returns that hash as a hexadecimal string. */
 private val ByteArray.hashStrSha256
     get() = MessageDigest.getInstance("SHA-256").digest(this).joinToString("") { "%02x".format(it) }
+
+/** Converts this Java [Instant] to a [FileTime] representing the same point of time value on the time-line. */
+private fun Instant.toFileTime() = FileTime.from(this)

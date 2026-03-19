@@ -5,6 +5,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import java.io.File
 import java.sql.SQLException
@@ -56,6 +59,25 @@ class DatabaseManagerTest : FunSpec({
         databaseManager.close()
     }
 
+    context("Method getDownloadInfoByHash") {
+        test("should retrieve correct information including timestamps") {
+            val info = databaseManager.getDownloadInfoByHash("hash999").shouldNotBeNull()
+            info shouldBe DownloadedFileInfo(
+                "hash999",
+                "Test.jpg",
+                "Cats",
+                "Cat",
+                "Kitten",
+                "",
+                "2026-03-16T10:05:00Z",
+                "2026-03-16T09:00:00Z",
+            )
+        }
+        test("should return null if hash not found") {
+            databaseManager.getDownloadInfoByHash("non-existent").shouldBeNull()
+        }
+    }
+
     context("Method isFilenameTaken") {
         test("should detect a colliding filename") {
             databaseManager.isFilenameTaken("TestImage.jpg").shouldBeTrue()
@@ -78,7 +100,16 @@ class DatabaseManagerTest : FunSpec({
 
     context("Method saveToDatabase") {
         test("should throw an exception when the filename violates the unique case-insensitive index") {
-            val preparedInfo = DownloadedFileInfo("hash2", "test.jpg", "Dogs", "Doggy", "Puppy", "pup")
+            val preparedInfo = DownloadedFileInfo(
+                "hash2",
+                "test.jpg",
+                "Dogs",
+                "Doggy",
+                "Puppy",
+                "pup",
+                "2026-03-17T11:00:00Z",
+                null,
+            )
             shouldThrow<SQLException> {
                 databaseManager.saveToDatabase(preparedInfo)
             }
@@ -98,7 +129,20 @@ private fun DatabaseManager.putTestData() {
             "Test",
             "Test Image",
             "Test of case-insensitive search",
+            "2026-03-16T10:00:00Z",
+            null,
         ),
     )
-    saveToDatabase(DownloadedFileInfo("hash999", "Test.jpg", "Cats", "Cat", "Kitten", ""))
+    saveToDatabase(
+        DownloadedFileInfo(
+            "hash999",
+            "Test.jpg",
+            "Cats",
+            "Cat",
+            "Kitten",
+            "",
+            "2026-03-16T10:05:00Z",
+            "2026-03-16T09:00:00Z",
+        ),
+    )
 }

@@ -4,7 +4,9 @@ CREATE TABLE downloads (
     category                    TEXT                            NOT NULL,
     image_name                  TEXT                            NOT NULL,
     title                       TEXT                            NOT NULL,
-    description                 TEXT                            NOT NULL
+    description                 TEXT                            NOT NULL,
+    download_time               TEXT                            NOT NULL,
+    last_modified_time          TEXT                            NULL
 );
 
 -- Unique index for case-insensitive filename lookups

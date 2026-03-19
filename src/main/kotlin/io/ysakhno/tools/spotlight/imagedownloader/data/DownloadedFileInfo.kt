@@ -9,6 +9,9 @@ package io.ysakhno.tools.spotlight.imagedownloader.data
  * @property imageName The short (concise) name of the image file.
  * @property title The title of the image.
  * @property description A description of the image. Can be empty if not available.
+ * @property downloadTime The time when the image was downloaded and saved to disk, in ISO-8601 format.
+ * @property lastModifiedTime The time when the image was last modified, in ISO-8601 format, or `null` if the time of
+ * last modification is unknown.
  * @author Yurii Sakhno
  */
 data class DownloadedFileInfo(
@@ -18,4 +21,6 @@ data class DownloadedFileInfo(
     val imageName: String,
     val title: String,
     val description: String,
+    val downloadTime: String,
+    val lastModifiedTime: String? = null,
 )
