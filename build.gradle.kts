@@ -2,28 +2,26 @@ import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.3.10"
-    id("io.kotest") version "6.1.7"
-    id("org.jetbrains.kotlinx.kover") version "0.9.7"
+    kotlin("jvm") version libs.versions.kotlin
+    alias(libs.plugins.kotest)
+    alias(libs.plugins.kotlinx.kover)
 
-    id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("org.jmailen.kotlinter") version "5.4.2"
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kotlinter)
 
     application
-    id("com.gradleup.shadow") version "9.4.0"
+    alias(libs.plugins.gradleup.shadow)
 }
 
 dependencies {
-    implementation("org.jsoup:jsoup:1.22.1")
-    implementation("org.xerial:sqlite-jdbc:3.51.3.0")
-    implementation("org.flywaydb:flyway-core:12.1.0")
-    implementation("com.github.ajalt.clikt:clikt:5.1.0")
-    implementation("org.apache.commons:commons-csv:1.14.1")
+    implementation(libs.jsoup)
+    implementation(libs.sqlite.jdbc)
+    implementation(libs.flyway.core)
+    implementation(libs.clikt)
+    implementation(libs.apache.commons.csv)
 
-    testImplementation("io.kotest:kotest-framework-engine:6.1.7")
-    testImplementation("io.kotest:kotest-extensions:6.1.7")
-    testImplementation("io.kotest:kotest-property:6.1.7")
-    testRuntimeOnly("io.kotest:kotest-runner-junit5:6.1.7")
+    testImplementation(libs.bundles.kotest)
+    testRuntimeOnly(libs.kotest.runner)
 }
 
 kotlin {
@@ -31,10 +29,10 @@ kotlin {
         allWarningsAsErrors = true
         freeCompilerArgs.add("-Xexplicit-backing-fields")
         freeCompilerArgs.add("-Xreturn-value-checker=full")
-        jvmTarget = JvmTarget.fromTarget("21")
+        jvmTarget = JvmTarget.fromTarget(libs.versions.javaLanguageCompatibility.get())
     }
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of("21")
+        languageVersion = JavaLanguageVersion.of(libs.versions.javaLanguageCompatibility.get())
     }
 }
 
@@ -52,7 +50,7 @@ kover {
 }
 
 kotlinter {
-    ktlintVersion = "1.8.0"
+    ktlintVersion = libs.versions.ktlint.get()
     ignoreFormatFailures = false
     ignoreLintFailures = false
     reporters = arrayOf("plain", "checkstyle", "html")
