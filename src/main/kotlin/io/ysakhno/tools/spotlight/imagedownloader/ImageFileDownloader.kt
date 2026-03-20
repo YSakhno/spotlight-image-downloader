@@ -8,6 +8,7 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit.MILLIS
+import java.util.Base64
 import org.jsoup.Connection
 
 /**
@@ -44,7 +45,7 @@ class ImageFileDownloader(
     ): DownloadResult {
         val response = httpSession.newRequest().url(url).ignoreContentType(true).execute()
         val imgData = response.bodyAsBytes()
-        val imgHash = imgData.hashStrSha256
+        val imgHash = imgData.hash
 
         dbManager.getDownloadInfoByHash(imgHash)?.let { info ->
             processingStats.incrementSkipped()
@@ -96,9 +97,17 @@ class ImageFileDownloader(
     }
 }
 
-/** Computes the SHA-256 hash of the bytes stored in this array and returns that hash as a hexadecimal string. */
-private val ByteArray.hashStrSha256
-    get() = MessageDigest.getInstance("SHA-256").digest(this).joinToString("") { "%02x".format(it) }
+/**
+ * Computes the hash of the bytes stored in this array and returns the Base64-encoded SHA-256 hash prefixed with the
+ * size of the original (this) array.
+ */
+internal val ByteArray.hash: String
+    get() {
+        val sha256Hash = MessageDigest.getInstance("SHA-256").digest(this)
+        val sha256Encoded = Base64.getEncoder().withoutPadding().encodeToString(sha256Hash)
+
+        return "${this.size}:$sha256Encoded"
+    }
 
 /** Converts this Java [Instant] to a [FileTime] representing the same point of time value on the time-line. */
 private fun Instant.toFileTime() = FileTime.from(this)
