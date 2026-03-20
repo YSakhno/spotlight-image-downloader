@@ -64,6 +64,7 @@ class DatabaseManagerTest : FunSpec({
             val info = databaseManager.getDownloadInfoByHash("hash999").shouldNotBeNull()
             info shouldBe DownloadedFileInfo(
                 "hash999",
+                "/kitten.jpg",
                 "Test.jpg",
                 "Cats",
                 "Cat",
@@ -75,6 +76,26 @@ class DatabaseManagerTest : FunSpec({
         }
         test("should return null if hash not found") {
             databaseManager.getDownloadInfoByHash("non-existent").shouldBeNull()
+        }
+    }
+
+    context("Method getDownloadInfoByOriginalUrl") {
+        test("should retrieve correct information") {
+            val info = databaseManager.getDownloadInfoByOriginalUrl("/fall-foliage.jpg").shouldNotBeNull()
+            info shouldBe DownloadedFileInfo(
+                "hash456",
+                "/fall-foliage.jpg",
+                "Nature-Fall.jpg",
+                "Nature",
+                "Fall",
+                "Forest in the Fall",
+                "Test of retrieval by URL",
+                "2026-03-20T08:40:51Z",
+                null,
+            )
+        }
+        test("should return null if URL not found") {
+            databaseManager.getDownloadInfoByOriginalUrl("/not-found.jpg").shouldBeNull()
         }
     }
 
@@ -102,12 +123,29 @@ class DatabaseManagerTest : FunSpec({
         test("should throw an exception when the filename violates the unique case-insensitive index") {
             val preparedInfo = DownloadedFileInfo(
                 "hash2",
+                "/pup.jpg",
                 "test.jpg",
                 "Dogs",
                 "Doggy",
                 "Puppy",
                 "pup",
                 "2026-03-17T11:00:00Z",
+                null,
+            )
+            shouldThrow<SQLException> {
+                databaseManager.saveToDatabase(preparedInfo)
+            }
+        }
+        test("should throw an exception when the originalUrl violates the UNIQUE constraint") {
+            val preparedInfo = DownloadedFileInfo(
+                "hash3",
+                "/test.jpg", // Already present for hash123
+                "AnotherName.jpg",
+                "Dogs",
+                "Boggy",
+                "Puppet",
+                "nothing here",
+                "2026-03-20T08:42:24Z",
                 null,
             )
             shouldThrow<SQLException> {
@@ -124,6 +162,7 @@ private fun DatabaseManager.putTestData() {
     saveToDatabase(
         DownloadedFileInfo(
             "hash123",
+            "/test.jpg",
             "TestImage.jpg",
             "Tests",
             "Test",
@@ -136,6 +175,7 @@ private fun DatabaseManager.putTestData() {
     saveToDatabase(
         DownloadedFileInfo(
             "hash999",
+            "/kitten.jpg",
             "Test.jpg",
             "Cats",
             "Cat",
@@ -143,6 +183,19 @@ private fun DatabaseManager.putTestData() {
             "",
             "2026-03-16T10:05:00Z",
             "2026-03-16T09:00:00Z",
+        ),
+    )
+    saveToDatabase(
+        DownloadedFileInfo(
+            "hash456",
+            "/fall-foliage.jpg",
+            "Nature-Fall.jpg",
+            "Nature",
+            "Fall",
+            "Forest in the Fall",
+            "Test of retrieval by URL",
+            "2026-03-20T08:40:51Z",
+            null,
         ),
     )
 }

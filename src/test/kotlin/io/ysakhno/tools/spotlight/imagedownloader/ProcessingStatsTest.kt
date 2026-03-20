@@ -34,7 +34,16 @@ class ProcessingStatsTest : FunSpec({
         test("should always be false if maxDownloadsPerRun is null") {
             val stats = ProcessingStats(maxDownloadsPerRun = null)
             repeat(100) { i ->
-                val info = DownloadedFileInfo("h$i", "f$i.jpg", "C", "l", "ll", "", "2026-03-18T16:30:48.362Z")
+                val info = DownloadedFileInfo(
+                    hash = "h$i",
+                    originalUrl = "/u$i.jpg",
+                    filename = "f$i.jpg",
+                    category = "C",
+                    imageName = "l",
+                    title = "ll",
+                    description = "",
+                    downloadTime = "2026-03-18T16:30:48.362Z",
+                )
                 stats.addDownloadedFile(info)
                 withClue("iteration $i") { stats.isDownloadsLimitReached.shouldBeFalse() }
             }
@@ -43,14 +52,47 @@ class ProcessingStatsTest : FunSpec({
             val stats = ProcessingStats(maxDownloadsPerRun = 2)
             stats.isDownloadsLimitReached.shouldBeFalse()
 
-            stats.addDownloadedFile(DownloadedFileInfo("h1", "f1.jpg", "C", "n", "nn", "", "2026-03-18T16:33:12.556Z"))
+            stats.addDownloadedFile(
+                DownloadedFileInfo(
+                    hash = "h1",
+                    originalUrl = "/u1.jpg",
+                    filename = "f1.jpg",
+                    category = "C",
+                    imageName = "n",
+                    title = "nn",
+                    description = "",
+                    downloadTime = "2026-03-18T16:33:12.556Z",
+                ),
+            )
             stats.isDownloadsLimitReached.shouldBeFalse()
 
-            stats.addDownloadedFile(DownloadedFileInfo("h2", "f2.jpg", "C", "m", "mm", "", "2026-03-18T16:34:40.137Z"))
+            stats.addDownloadedFile(
+                DownloadedFileInfo(
+                    hash = "h2",
+                    originalUrl = "/u2.jpg",
+                    filename = "f2.jpg",
+                    category = "C",
+                    imageName = "m",
+                    title = "mm",
+                    description = "",
+                    downloadTime = "2026-03-18T16:34:40.137Z",
+                ),
+            )
             stats.isDownloadsLimitReached.shouldBeTrue()
 
             // Even if it is exceeded
-            stats.addDownloadedFile(DownloadedFileInfo("h3", "f3.jpg", "C", "o", "pp", "", "2026-03-18T16:34:41.619Z"))
+            stats.addDownloadedFile(
+                DownloadedFileInfo(
+                    hash = "h3",
+                    originalUrl = "/u3.jpg",
+                    filename = "f3.jpg",
+                    category = "C",
+                    imageName = "o",
+                    title = "pp",
+                    description = "",
+                    downloadTime = "2026-03-18T16:34:41.619Z",
+                ),
+            )
             stats.isDownloadsLimitReached.shouldBeTrue()
         }
     }
@@ -60,6 +102,7 @@ class ProcessingStatsTest : FunSpec({
             val stats = ProcessingStats()
             val info = DownloadedFileInfo(
                 hash = "hash1",
+                originalUrl = "/url1.jpg",
                 filename = "file1.jpg",
                 category = "CategoryA",
                 imageName = "Image 1",
@@ -77,9 +120,36 @@ class ProcessingStatsTest : FunSpec({
         }
         test("should handle multiple files in the same and different categories") {
             val stats = ProcessingStats()
-            val info1 = DownloadedFileInfo("h1", "f1.jpg", "Cat1", "n1", "t1", "d1", "2026-03-18T17:57:06.879Z")
-            val info2 = DownloadedFileInfo("h2", "f2.jpg", "Cat2", "n2", "t2", "d2", "2026-03-18T17:57:26.630Z")
-            val info3 = DownloadedFileInfo("h3", "f3.jpg", "Cat1", "n3", "t3", "d3", "2026-03-18T17:57:44.373Z")
+            val info1 = DownloadedFileInfo(
+                hash = "h1",
+                originalUrl = "/imgs/u1.jpg",
+                filename = "f1.jpg",
+                category = "Cat1",
+                imageName = "n1",
+                title = "t1",
+                description = "d1",
+                downloadTime = "2026-03-18T17:57:06.879Z",
+            )
+            val info2 = DownloadedFileInfo(
+                hash = "h2",
+                originalUrl = "/imgs/u2.jpg",
+                filename = "f2.jpg",
+                category = "Cat2",
+                imageName = "n2",
+                title = "t2",
+                description = "d2",
+                downloadTime = "2026-03-18T17:57:26.630Z",
+            )
+            val info3 = DownloadedFileInfo(
+                hash = "h3",
+                originalUrl = "/imgs/u3.jpg",
+                filename = "f3.jpg",
+                category = "Cat1",
+                imageName = "n3",
+                title = "t3",
+                description = "d3",
+                downloadTime = "2026-03-18T17:57:44.373Z",
+            )
 
             stats.addDownloadedFile(info1)
             stats.addDownloadedFile(info2)

@@ -65,39 +65,57 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
     }
 
     /** Retrieves information about a downloaded image by its SHA-256 [hash], or `null` if the record is not found. */
-    fun getDownloadInfoByHash(hash: String): DownloadedFileInfo? {
-        validConnection.prepareStatement(
-            """
-                SELECT filename, category, image_name, title, description, download_time, last_modified_time
-                  FROM downloads
-                 WHERE file_hash = ?
-            """.trimIndent(),
-        )?.use { stmt ->
-            stmt.setString(1, hash)
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    val filename = rs.getString("filename")
-                    val categoryName = rs.getString("category")
-                    val imageName = rs.getString("image_name")
-                    val title = rs.getString("title")
-                    val description = rs.getString("description")
-                    val downloadTime = rs.getString("download_time")
-                    val lastModifiedTime = rs.getString("last_modified_time")
-                    return DownloadedFileInfo(
-                        hash = hash,
-                        filename = filename,
-                        category = categoryName,
-                        imageName = imageName,
-                        title = title,
-                        description = description,
-                        downloadTime = downloadTime,
-                        lastModifiedTime = lastModifiedTime,
-                    )
-                }
-            }
-        }
-        return null
+    fun getDownloadInfoByHash(hash: String) = validConnection.prepareStatement(
+        """
+            SELECT file_hash,
+                   original_url,
+                   filename,
+                   category,
+                   image_name,
+                   title,
+                   description,
+                   download_time,
+                   last_modified_time
+              FROM downloads
+             WHERE file_hash = ?
+        """.trimIndent(),
+    )?.use { stmt ->
+        stmt.setString(1, hash)
+        stmt.executeQuery().use(::mapResultSetToInfo)
     }
+
+    /** Retrieves information about a downloaded image by its [originalUrl], or `null` if the record is not found. */
+    fun getDownloadInfoByOriginalUrl(originalUrl: String) = validConnection.prepareStatement(
+        """
+            SELECT file_hash,
+                   original_url,
+                   filename,
+                   category,
+                   image_name,
+                   title,
+                   description,
+                   download_time,
+                   last_modified_time
+              FROM downloads
+             WHERE original_url = ?
+        """.trimIndent(),
+    )?.use { stmt ->
+        stmt.setString(1, originalUrl)
+        stmt.executeQuery().use(::mapResultSetToInfo)
+    }
+
+    /** Maps the current row of the provided [ResultSet] to a [DownloadedFileInfo] instance. */
+    private fun mapResultSetToInfo(rs: ResultSet) = if (rs.next()) DownloadedFileInfo(
+        hash = rs.getString("file_hash"),
+        originalUrl = rs.getString("original_url"),
+        filename = rs.getString("filename"),
+        category = rs.getString("category"),
+        imageName = rs.getString("image_name"),
+        title = rs.getString("title"),
+        description = rs.getString("description"),
+        downloadTime = rs.getString("download_time"),
+        lastModifiedTime = rs.getString("last_modified_time"),
+    ) else null
 
     /**
      * Checks whether a file with the specific [filename] was already saved, and therefore the name is now considered
@@ -118,18 +136,20 @@ class DatabaseManager(databaseFilePath: String) : AutoCloseable {
         validConnection.prepareStatement(
             """
                 INSERT INTO downloads (
-                    file_hash, filename, category, image_name, title, description, download_time, last_modified_time
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    file_hash, original_url, filename, category, image_name, title, description,
+                    download_time, last_modified_time
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
         )?.use { stmt ->
             stmt.setString(1, info.hash)
-            stmt.setString(2, info.filename)
-            stmt.setString(3, info.category)
-            stmt.setString(4, info.imageName)
-            stmt.setString(5, info.title)
-            stmt.setString(6, info.description)
-            stmt.setString(7, info.downloadTime)
-            stmt.setString(8, info.lastModifiedTime)
+            stmt.setString(2, info.originalUrl)
+            stmt.setString(3, info.filename)
+            stmt.setString(4, info.category)
+            stmt.setString(5, info.imageName)
+            stmt.setString(6, info.title)
+            stmt.setString(7, info.description)
+            stmt.setString(8, info.downloadTime)
+            stmt.setString(9, info.lastModifiedTime)
             stmt.executeUpdate()
         }
     }

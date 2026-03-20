@@ -30,14 +30,17 @@ class ImageFileDownloader(
      * Downloads an image and saves its metadata to the database.
      *
      * @param url the URL of the image.
+     * @param originalUrl the original image URL (as it is specified for the background image in the HTML).
      * @param categoryName the name of the category the image belongs to.
      * @param imageName the short (concise) name for the image file.
      * @param title the title of the image.
      * @param description a description of the image.
      * @return the result of the download operation.
      */
+    @Suppress("detekt:complexity:LongParameterList") // making an exception for this method
     fun downloadImage(
         url: String,
+        originalUrl: String,
         categoryName: String,
         imageName: String,
         title: String,
@@ -66,6 +69,7 @@ class ImageFileDownloader(
 
         val info = DownloadedFileInfo(
             hash = imgHash,
+            originalUrl = originalUrl,
             filename = filename,
             category = categoryName,
             imageName = imageName,

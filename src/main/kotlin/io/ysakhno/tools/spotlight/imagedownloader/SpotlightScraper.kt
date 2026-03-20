@@ -107,7 +107,16 @@ class SpotlightScraper(
             val title = doc.getTextBy("div#heading-url") ?: throw ScrapingException("Could not find title div")
             val description = doc.getTextBy("span.btsl-description").orEmpty()
 
-            when (val result = downloader.downloadImage(imgUrl, categoryName, imageName, title, description)) {
+            when (
+                val result = downloader.downloadImage(
+                    imgUrl,
+                    relativeImgUrl,
+                    categoryName,
+                    imageName,
+                    title,
+                    description,
+                )
+            ) {
                 is DownloadResult.Saved -> println(" SUCCESS (saved as ${result.info.filename})")
 
                 is DownloadResult.Duplicate ->
