@@ -1,6 +1,7 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
 import org.jsoup.Connection
+import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 /** A regex used to extract the URL from CSS `url()` syntax. */
@@ -19,30 +20,71 @@ class SpotlightScraper(
     private val downloader: ImageFileDownloader,
 ) {
     /**
+     * Scrapes the Spotlight website starting from the provided URL. It determines if the URL is an initial page
+     * or a category page, and proceeds accordingly to find and process all image categories.
+     *
+     * @param url the URL to start scraping from.
+     */
+    @Suppress("detekt:potential-bugs:UnreachableCode") // seems to be false positive
+    fun processUrl(url: String) {
+        var doc = runCatching { httpSession.newRequest().url(url).get() }
+            .onFailure { throwable ->
+                processingStats.reportError("Could not process initial URL $url: ${throwable.message}")
+            }
+            .getOrNull() ?: return
+
+        // Language-independent detection: Category page contains image cards; Initial page contains category pills
+        val isCategoryPage = doc.select("div.btsl-image-card").isNotEmpty()
+
+        if (isCategoryPage) {
+            print("Detected a Category page, navigating to initial page...")
+            // The link to the initial page is usually nested in a div with one of these classes
+            val initialPageUrl = doc.selectFirst("div.main-pill a, div.show-img-car a, div.cat-nav a")?.absUrl("href")
+
+            if (initialPageUrl == null) {
+                println(" ERROR")
+                processingStats.reportError("Provided URL does not seem to point to a Spotlight page")
+                return
+            }
+
+            doc = runCatching { httpSession.newRequest().url(initialPageUrl).get() }
+                .onFailure { throwable ->
+                    println(" ERROR")
+                    processingStats.reportError(
+                        @Suppress("detekt:potential-bugs:NullableToStringCall") // seems to be a bug in Detekt
+                        "Could not navigate to initial page $initialPageUrl: ${throwable.message}",
+                    )
+                }
+                .onSuccess { println(" DONE") }
+                .getOrNull() ?: return
+        }
+
+        if (doc.select("div.slide a").isEmpty()) {
+            processingStats.reportError("Provided URL does not seem to point to a Spotlight page")
+        } else {
+            processInitialPage(doc)
+        }
+    }
+
+    /**
      * Processes the initial page of the website to find all image categories, and then goes on to downloading the
      * category pages, finally moving on to actually downloading individual images.
      *
-     * @param url the URL of the initial page.
-     * @return a result representing the outcome of the scraping operation.
+     * @param doc the document representing the initial page.
      */
-    fun processInitialPage(url: String) = runCatching { httpSession.newRequest().url(url).get() }
-        .map { it.select("div.slide a") }
-        .onSuccess { println("Processing images in ${it.size} categories") }
-        .map { categoryLinks ->
-            for (element in categoryLinks) {
-                val categoryUrl = element.absUrl("href")
-                val categoryName = element.getTextBy("div.text")
+    fun processInitialPage(doc: Document) {
+        val categoryLinks = doc.select("div.slide a")
+        println("Processing images in ${categoryLinks.size} categories")
 
-                if (categoryUrl.isNotBlank() && categoryName != null) {
-                    processCategoryPage(categoryUrl, categoryName)
-                }
+        for (element in categoryLinks) {
+            val categoryUrl = element.absUrl("href")
+            val categoryName = element.getTextBy("div.text")
+
+            if (categoryUrl.isNotBlank() && categoryName != null) {
+                processCategoryPage(categoryUrl, categoryName)
             }
         }
-        .onFailure { throwable ->
-            println(" ERROR")
-            processingStats.reportError("Could not process initial page $url: ${throwable.message}")
-        }
-        .getOrDefault(Unit)
+    }
 
     /**
      * Processes a category page to find all images within that category, and then goes on to actually downloading

@@ -31,10 +31,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
      * argument.
      */
     private val initialUrl by argument(name = "initial-url")
-        .help(
-            "The initial URL to start scraping from" +
-                " (this page must contain the list of Categories, not the particular category)",
-        )
+        .help("The initial URL to start crawling and downloading from")
 
     /** The maximum number of images to download in a single run. This limit is set by a hidden command line option. */
     private val maxDownloadsPerRun by option("--max-downloads-per-run", hidden = true)
@@ -74,7 +71,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
             dbManager.migrateDatabase()
             dbManager.connect()
 
-            scraper.processInitialPage(initialUrl)
+            scraper.processUrl(initialUrl)
             println()
             generateSummaries()
             printFinalStats()

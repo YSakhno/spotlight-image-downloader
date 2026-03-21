@@ -18,8 +18,8 @@ transliterating non-ASCII characters, spelling out emojis using their Unicode na
 
 The utility accepts the following command-line argument and options:
 
-- `initial-url`: **(Required)** The starting URL for the scraping process. This page should contain the list of all
-  categories rather than a specific category's images.  
+- `initial-url`: **(Required)** The starting URL for the scraping process. If the provided URL points to a specific
+  category, the utility will automatically attempt to navigate to the initial page containing all categories.  
   Note: this is a positional argument rather than an option.
 - `--version`: Displays the application name and current version, then exits.
 - `-h`, `--help`: Displays a help message showing the available parameters and options.
