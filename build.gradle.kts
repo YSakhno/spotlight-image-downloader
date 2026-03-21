@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.sqlite.jdbc)
     implementation(libs.flyway.core)
     implementation(libs.clikt)
+    implementation(libs.icu4j)
     implementation(libs.apache.commons.csv)
 
     testImplementation(libs.bundles.kotest)

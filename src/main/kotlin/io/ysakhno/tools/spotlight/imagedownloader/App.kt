@@ -10,6 +10,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.restrictTo
+import io.ysakhno.tools.spotlight.imagedownloader.util.sanitizedName
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -92,11 +93,8 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
 
     private fun generateSummaries() {
         for ((category, files) in processingStats.newFilesByCategory) {
-            val safeCategory = category.replace(Regex("[ -]"), "_")
-            val csvFile = File("$safeCategory.csv")
-
             runCatching {
-                FileWriter(csvFile).use { writer ->
+                FileWriter("${category.sanitizedName}.csv").use { writer ->
                     val printer = CSVPrinter(
                         writer,
                         CSVFormat.DEFAULT.builder().setHeader("Filename", "Title", "Description").get(),

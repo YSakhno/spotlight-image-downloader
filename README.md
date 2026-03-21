@@ -7,6 +7,8 @@ maintains a small local SQLite database to track downloaded files and prevent du
 For each category, the utility also generates a CSV file containing metadata for each downloaded image, including its
 filename, title, and description, making it easy to organize and reference your local collection.
 
+The utility saves images on disk under descriptive filenames (e.g., `Italy_and_Greece-Thalassa.jpg`) by automatically
+transliterating non-ASCII characters, spelling out emojis using their Unicode names, and sanitizing other characters.
 
 ## Command Line Parameters
 

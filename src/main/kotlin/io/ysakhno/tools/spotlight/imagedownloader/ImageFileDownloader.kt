@@ -1,6 +1,7 @@
 package io.ysakhno.tools.spotlight.imagedownloader
 
 import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
+import io.ysakhno.tools.spotlight.imagedownloader.util.sanitizedName
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.FileTime
@@ -85,10 +86,19 @@ class ImageFileDownloader(
         return DownloadResult.Saved(info)
     }
 
+    /**
+     * Generates a unique filename for an image file based on the provided category name and title. Both category and
+     * title are [sanitized][String.sanitizedName] before being used as part of the filename.
+     *
+     * The method ensures that there are no collisions with existing filenames in the database.
+     *
+     * @param categoryName the name of the category the file belongs to.
+     * @param title the title of the image.
+     * @return a unique filename for the image file, formatted as `"{categoryName}-{title}.jpg"`, with an optional
+     * numeric suffix to avoid collisions.
+     */
     private fun generateFilename(categoryName: String, title: String): String {
-        val safeCategory = categoryName.replace(Regex("[ -]"), "_")
-        val safeTitle = title.replace(Regex("[ -]"), "_")
-        val baseName = "$safeCategory-$safeTitle"
+        val baseName = "${categoryName.sanitizedName}-${title.sanitizedName}"
         var suffix = ""
         var counter = 2
 
