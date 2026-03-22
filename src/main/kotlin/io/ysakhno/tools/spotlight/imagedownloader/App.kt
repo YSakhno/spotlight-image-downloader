@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
@@ -39,12 +40,31 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         .restrictTo(min = 1)
         .help("The maximum number of images to download in a run")
 
+    /**
+     * The command line option to specify whether to check for duplicate images by their original URL before downloading
+     * them.
+     *
+     * If the value of the option is `true` (the default), duplicates will be checked by the images' URLs. If the value
+     * is `false`, duplicates will be checked by hashes of the images' data only.
+     */
+    private val isCheckByUrl by option("--check-by-url")
+        .flag("--no-check-by-url", default = true)
+        .help("Check for duplicate images by their original URL before downloading them (on by default)")
+
     private val downloadsDir = File("downloads")
     private val dbFile = File("spotlight_downloader.db")
     private val dbManager = DatabaseManager(dbFile.absolutePath)
     private val processingStats by lazy { ProcessingStats(maxDownloadsPerRun) }
     private val httpSession = Jsoup.newSession()
-    private val downloader by lazy { ImageFileDownloader(processingStats, httpSession, dbManager, downloadsDir) }
+    private val downloader by lazy {
+        ImageFileDownloader(
+            processingStats = processingStats,
+            httpSession = httpSession,
+            dbManager = dbManager,
+            downloadsDir = downloadsDir,
+            isCheckByUrl = isCheckByUrl,
+        )
+    }
     private val scraper by lazy {
         SpotlightScraper(
             processingStats = processingStats,

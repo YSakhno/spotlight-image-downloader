@@ -19,6 +19,7 @@ import org.jsoup.Connection
  * @param httpSession the session to use for HTTP requests.
  * @param dbManager manages the local database of downloaded files.
  * @param downloadsDir the directory where images are saved.
+ * @param isCheckByUrl whether to check for duplicate images by their original URL before downloading them.
  * @author Yurii Sakhno
  */
 class ImageFileDownloader(
@@ -26,6 +27,7 @@ class ImageFileDownloader(
     private val httpSession: Connection,
     private val dbManager: DatabaseManager,
     private val downloadsDir: File,
+    private val isCheckByUrl: Boolean = true,
 ) {
     /**
      * Downloads an image and saves its metadata to the database.
@@ -47,6 +49,13 @@ class ImageFileDownloader(
         title: String,
         description: String,
     ): DownloadResult {
+        if (isCheckByUrl) {
+            dbManager.getDownloadInfoByOriginalUrl(originalUrl)?.let { info ->
+                processingStats.incrementSkipped()
+                return DownloadResult.Duplicate(info)
+            }
+        }
+
         val response = httpSession.newRequest().url(url).ignoreContentType(true).execute()
         val imgData = response.bodyAsBytes()
         val imgHash = imgData.hash
