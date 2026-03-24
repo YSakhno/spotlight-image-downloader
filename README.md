@@ -21,6 +21,8 @@ The utility accepts the following command-line argument and options:
 - `initial-url`: **(Required)** The starting URL for the scraping process. If the provided URL points to a specific
   category, the utility will automatically attempt to navigate to the initial page containing all categories.  
   Note: this is a positional argument rather than an option.
+- `--downloads-dir`: The path to save downloaded files to (default: `./downloads/`).
+- `--db-file`: The path to the SQLite database file (default: `spotlight_downloader.db`).
 - `--(no-)check-by-url`: Enables (or disables) duplicate detection by URL before downloading (enabled by default).
 - `--version`: Displays the application name and current version, then exits.
 - `-h`, `--help`: Displays a help message showing the available parameters and options.

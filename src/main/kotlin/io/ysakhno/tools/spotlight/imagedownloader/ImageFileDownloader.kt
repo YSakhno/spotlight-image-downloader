@@ -2,8 +2,8 @@ package io.ysakhno.tools.spotlight.imagedownloader
 
 import io.ysakhno.tools.spotlight.imagedownloader.data.DownloadedFileInfo
 import io.ysakhno.tools.spotlight.imagedownloader.util.sanitizedName
-import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.attribute.FileTime
 import java.security.MessageDigest
 import java.time.Instant
@@ -18,7 +18,7 @@ import org.jsoup.Connection
  * @param processingStats tracks the statistics of the entire download process.
  * @param httpSession the session to use for HTTP requests.
  * @param dbManager manages the local database of downloaded files.
- * @param downloadsDir the directory where images are saved.
+ * @param downloadsDir the path of the directory where images are saved.
  * @param isCheckByUrl whether to check for duplicate images by their original URL before downloading them.
  * @author Yurii Sakhno
  */
@@ -26,7 +26,7 @@ class ImageFileDownloader(
     private val processingStats: ProcessingStats,
     private val httpSession: Connection,
     private val dbManager: DatabaseManager,
-    private val downloadsDir: File,
+    private val downloadsDir: Path,
     private val isCheckByUrl: Boolean = true,
 ) {
     /**
@@ -71,8 +71,7 @@ class ImageFileDownloader(
         }?.getOrNull()
 
         val filename = generateFilename(categoryName, imageName)
-        val file = File(downloadsDir, filename)
-        val path = file.toPath()
+        val path = downloadsDir.resolve(filename)
 
         Files.write(path, imgData)
         if (lastModifiedTimestamp != null) Files.setLastModifiedTime(path, lastModifiedTimestamp.toFileTime())

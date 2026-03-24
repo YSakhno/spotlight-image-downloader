@@ -5,17 +5,23 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
+import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.path
 import com.github.ajalt.clikt.parameters.types.restrictTo
 import io.ysakhno.tools.spotlight.imagedownloader.util.sanitizedName
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.jsoup.Jsoup
@@ -40,6 +46,18 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         .restrictTo(min = 1)
         .help("The maximum number of images to download in a run")
 
+    /** The command line option to specify the path to save downloaded files to. */
+    private val downloadsDir by option()
+        .path(mustExist = false, canBeFile = false, canBeDir = true, canBeSymlink = true)
+        .default(Path.of("./downloads/"))
+        .help("The path to save downloaded files to (default: ./downloads/)")
+
+    /** The command line option to specify the path to the SQLite database file. */
+    private val dbFile by option()
+        .file(mustExist = false, canBeDir = false, canBeFile = true, canBeSymlink = true)
+        .default(File("spotlight_downloader.db"))
+        .help("The path to the SQLite database file (default: spotlight_downloader.db)")
+
     /**
      * The command line option to specify whether to check for duplicate images by their original URL before downloading
      * them.
@@ -51,9 +69,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         .flag("--no-check-by-url", default = true)
         .help("Check for duplicate images by their original URL before downloading them (on by default)")
 
-    private val downloadsDir = File("downloads")
-    private val dbFile = File("spotlight_downloader.db")
-    private val dbManager = DatabaseManager(dbFile.absolutePath)
+    private val dbManager by lazy { DatabaseManager(dbFile.absolutePath) }
     private val processingStats by lazy { ProcessingStats(maxDownloadsPerRun) }
     private val httpSession = Jsoup.newSession()
     private val downloader by lazy {
@@ -83,7 +99,7 @@ class App : CliktCommand(name = "spotlight-image-downloader") {
         echo()
 
         if (!downloadsDir.exists()) {
-            downloadsDir.mkdirs()
+            downloadsDir.createDirectories()
         }
 
         val executionOutcome = runCatching {
