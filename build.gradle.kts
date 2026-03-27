@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.icu4j)
     implementation(libs.apache.commons.csv)
 
+    testImplementation(libs.mockk)
     testImplementation(libs.bundles.kotest)
     testRuntimeOnly(libs.kotest.runner)
 }
@@ -39,6 +40,7 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
 }
 
 kover {

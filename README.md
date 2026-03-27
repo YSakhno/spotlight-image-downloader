@@ -14,23 +14,40 @@ transliterating non-ASCII characters, spelling out emojis using their Unicode na
 
 **Usage pattern:**
 
-    spotlight-image-downloader [<options>] <initial-url>
+    spotlight-image-downloader [<global-options>] <command> [<command-options>] [<args>]
 
-The utility accepts the following command-line argument and options:
+The utility supports the following commands:
+
+- `download` (alias: `dl`): Downloads images from the specified initial URL.
+
+### Global Options
+
+The following options are shared across all commands:
+
+- `--db-file`: The path to the SQLite database file (default: `spotlight_downloader.db`).
+- `--version`: Displays the application name and current version, then exits.
+- `-h`, `--help`: Displays a help message showing the available parameters and options.
+
+### Download Command Options
+
+The `download` command accepts the following argument and options:
 
 - `initial-url`: **(Required)** The starting URL for the scraping process. If the provided URL points to a specific
   category, the utility will automatically attempt to navigate to the initial page containing all categories.  
   Note: this is a positional argument rather than an option.
 - `--downloads-dir`: The path to save downloaded files to (default: `./downloads/`).
-- `--db-file`: The path to the SQLite database file (default: `spotlight_downloader.db`).
 - `--(no-)check-by-url`: Enables (or disables) duplicate detection by URL before downloading (enabled by default).
-- `--version`: Displays the application name and current version, then exits.
-- `-h`, `--help`: Displays a help message showing the available parameters and options.
 
 ### Example Usage
 
 ```bash
-./gradlew shadowRun --args="https://example.link/spotlight-categories"
+./gradlew shadowRun --args="download https://example.link/spotlight-categories"
+```
+
+or using the alias:
+
+```bash
+./gradlew shadowRun --args="dl https://example.link/spotlight-categories"
 ```
 
 
@@ -60,13 +77,13 @@ This will create a JAR file in the `build/libs` directory containing all the nec
 You can run the application directly through Gradle:
 
 ```bash
-./gradlew runShadow --args="<initial-url>"
+./gradlew runShadow --args="download <initial-url>"
 ```
 
 Alternatively, after building the shadow JAR, you can run it using the `java` command:
 
 ```bash
-java -jar build/libs/spotlight-image-downloader-1.0-SNAPSHOT-all.jar https://url.of/initial/page
+java -jar build/libs/spotlight-image-downloader-1.0-SNAPSHOT-all.jar download https://url.of/initial/page
 ```
 
 *(Note: The exact JAR filename might vary based on the version specified in the build script.)*
