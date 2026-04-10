@@ -1,0 +1,24 @@
+SpotlightDownloader dev-build by Yurii Sakhno
+
+Processing images in 3 categories
+Category Nature... found 2 images
+  Downloading image Forest... SUCCESS (saved as Nature-Forest.jpg)
+  Downloading image Winter Trees... SUCCESS (saved as Nature-Winter_Trees.jpg)
+Category Flowers... found 3 images
+  Downloading image Rock purslane... SUCCESS (saved as Flowers-Rock_purslane.jpg)
+  Downloading image Nasturtium... SUCCESS (saved as Flowers-Nasturtium.jpg)
+  Downloading image Pelargonium × hortorum... SUCCESS (saved as Flowers-Pelargonium_hortorum.jpg)
+Category Birds... found 2 images
+  Downloading image American Robin... SUCCESS (saved as Birds-American_Robin.jpg)
+  Downloading image White Stork (Лелека білий)... SUCCESS (saved as Birds-White_Stork_Leleka_bilyy.jpg)
+
+Run summary:
+Files downloaded: 7
+Files skipped (duplicates): 0
+
+Categories with new downloads:
+- Birds
+- Flowers
+- Nature
+
+Execution finished successfully.

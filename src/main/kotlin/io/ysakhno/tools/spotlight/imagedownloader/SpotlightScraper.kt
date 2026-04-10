@@ -33,19 +33,15 @@ class SpotlightScraper(
             }
             .getOrNull() ?: return
 
-        // Language-independent detection: Category page contains image cards; Initial page contains category pills
-        val isCategoryPage = doc.select("div.btsl-image-card").isNotEmpty()
+        // Detection of initial page:
+        // - Category page contains a link to "more categories";
+        // - Initial page does not have a link
+        val linkToAllCategories = doc.select("div.main-pill a, div.show-img-car a, div.cat-nav a")
 
-        if (isCategoryPage) {
+        if (linkToAllCategories.isNotEmpty()) {
             print("Detected a Category page, navigating to initial page...")
-            // The link to the initial page is usually nested in a div with one of these classes
-            val initialPageUrl = doc.selectFirst("div.main-pill a, div.show-img-car a, div.cat-nav a")?.absUrl("href")
 
-            if (initialPageUrl == null) {
-                println(" ERROR")
-                processingStats.reportError("Provided URL does not seem to point to a Spotlight page")
-                return
-            }
+            val initialPageUrl = linkToAllCategories[0].absUrl("href")
 
             doc = runCatching { httpSession.newRequest().url(initialPageUrl).get() }
                 .onFailure { throwable ->

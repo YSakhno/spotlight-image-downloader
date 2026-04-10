@@ -61,3 +61,4 @@ Thumbs.db
 /tmp/
 spotlight_downloader*.db
 *.csv
+!test_files/**/*.csv

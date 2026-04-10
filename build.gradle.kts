@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.apache.commons.csv)
 
     testImplementation(libs.mockk)
+    testImplementation(libs.testing.junit5.system.exit)
+    testImplementation(libs.testing.mock.server)
     testImplementation(libs.bundles.kotest)
     testRuntimeOnly(libs.kotest.runner)
 }
@@ -40,7 +42,18 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+
+    val systemExitDep = configurations.testRuntimeClasspath.get().files.find { it.name.contains("junit5-system-exit") }
+    val loggingConfigPath =
+        sourceSets.test.get().resources.sourceDirectories.singleFile.resolve("logging.properties").absolutePath
+
     jvmArgs("-Xshare:off", "-XX:+EnableDynamicAgentLoading")
+    jvmArgs("-javaagent:$systemExitDep")
+
+    systemProperties(
+        "file.encoding" to "UTF-8", // this is to ensure correct console output encoding in tests
+        "java.util.logging.config.file" to loggingConfigPath,
+    )
 }
 
 kover {

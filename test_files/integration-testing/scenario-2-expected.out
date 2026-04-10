@@ -1,0 +1,18 @@
+SpotlightDownloader dev-build by Yurii Sakhno
+
+Detected a Category page, navigating to initial page... DONE
+Processing images in 2 categories
+Category Birds... found 2 images
+  Downloading image Canada Goose... SKIPPED (duplicate of Goose in Seedskadee in Birds)
+  Downloading image California Scrub Jay... SUCCESS (saved as Birds-California_Scrub_Jay.jpg)
+Category Animals... found 1 images
+  Downloading image Jellyfish... SKIPPED (duplicate of Pacific sea nettle in Ocean)
+
+Run summary:
+Files downloaded: 1
+Files skipped (duplicates): 2
+
+Categories with new downloads:
+- Birds
+
+Execution finished successfully.

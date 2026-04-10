@@ -1,0 +1,13 @@
+SpotlightDownloader dev-build by Yurii Sakhno
+
+Processing images in 2 categories
+Category Animals... found 1 images
+  Downloading image Jellyfish... SKIPPED (duplicate of Pacific sea nettle in Ocean)
+Category Space... found 1 images
+  Downloading image The Moon... SKIPPED (duplicate of Blue Moon in Unusual)
+
+Run summary:
+Files downloaded: 0
+Files skipped (duplicates): 2
+
+Execution finished successfully.
